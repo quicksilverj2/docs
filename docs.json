@@ -14,33 +14,7 @@
         "tab": "Guides",
         "groups": [
           {
-            "group": "Getting Started",
-            "pages": [
-              "index",
-              "getting-started/setup",
-              "getting-started/database-setup",
-              "getting-started/user-credentials",
-              "getting-started/secret-key-setup"
-            ]
-          },
-          {
-            "group": "Architecture & Design",
-            "pages": [
-              "architecture/product-requirements",
-              "architecture/tech-stack",
-              "architecture/design-system",
-              "architecture/implementation-plan"
-            ]
-          },
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api/overview",
-              "api/swagger-troubleshooting"
-            ]
-          },
-          {
-            "group": "Agent System",
+            "group": "Agent",
             "pages": [
               "agent/introduction",
               "agent/quick-start",
@@ -55,10 +29,20 @@
             ]
           },
           {
-            "group": "Development",
+            "group": "Backend",
             "pages": [
-              "development/setup-status",
-              "development/setup-complete"
+              "backend/api-overview",
+              "backend/setup",
+              "backend/database-setup",
+              "backend/secret-key-setup",
+              "backend/swagger-troubleshooting"
+            ]
+          },
+          {
+            "group": "Frontend",
+            "pages": [
+              "frontend/overview",
+              "frontend/setup"
             ]
           }
         ]

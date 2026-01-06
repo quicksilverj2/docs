@@ -1,0 +1,48 @@
+---
+title: "Frontend Setup"
+description: "Complete setup instructions for the Next.js frontend application including environment variables and running the dev server"
+---
+
+# Frontend Setup
+
+## Initial Setup
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Configure Environment Variables**
+
+   Create `frontend/.env.local`:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:4001
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+3. **Start Development Server**
+   ```bash
+   # From root directory
+   npm run dev:frontend
+   
+   # Or from frontend directory
+   cd frontend
+   npm run dev
+   ```
+
+   The frontend will be available at `http://localhost:4000`
+
+## First Steps
+
+1. Ensure the backend API is running (see [Backend Setup](/backend/setup))
+2. Access the application at `http://localhost:4000`
+3. Sign up as an IFA or Deal Originator
+4. Complete KYC (will be pending Compliance approval)
+
+## User Roles
+
+- **ADMIN**: Full system access (pre-seeded only)
+- **COMPLIANCE**: Approves KYC, securities, tranches
+- **IFA**: Creates clients, places orders/RFQs
+- **DEAL_ORIGINATOR**: Lists securities, manages tranches

@@ -1,0 +1,49 @@
+---
+title: "Frontend Overview"
+description: "Overview of the Next.js frontend application, pages, and components"
+---
+
+# Frontend Overview
+
+## Base URL
+
+**Base URL:** `http://localhost:4000`
+
+## Pages Implemented
+
+1. **Home** (`/`)
+   - Landing page
+
+2. **Authentication**
+   - `/auth/signin` - Sign in page
+   - `/auth/signup` - Sign up page
+
+3. **Marketplace** (`/marketplace`)
+   - Securities listing table
+   - Shows: Security name, latest price, available quantity, active tranches
+
+## Components Built
+
+1. **Layout Components**
+   - `MainLayout` - Main app layout with sidebar
+   - `Sidebar` - Left navigation sidebar
+
+2. **UI Components** (Design System)
+   - `Button` - Primary, secondary, tertiary variants
+   - `Table` - Full table component with header, body, rows, cells
+   - `Input` - Text input with design system styling
+   - `Label` - Form labels
+   - `Card` - Card container with header, title, content
+
+3. **Utilities**
+   - `api-client` - API client with authentication
+   - `utils` - Utility functions (cn for className merging)
+
+## Tech Stack
+
+- **Framework**: Next.js 14+ (App Router)
+- **Styling**: Tailwind CSS, ShadCN UI
+- **State Management**: React Query (TanStack Query)
+- **Forms**: React Hook Form with Zod validation
+- **Authentication**: Supabase Auth
+
