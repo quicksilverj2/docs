@@ -1,0 +1,160 @@
+---
+title: "Agent Setup"
+description: "Complete setup guide for the agent system including virtual environment and dependencies"
+---
+
+# Agent System Setup Guide
+
+## Quick Setup
+
+### 1. Create Virtual Environment
+```bash
+cd agent
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure Environment Variables
+
+Create `.env` file from the example:
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and add your credentials:
+
+#### Supabase Configuration (You Already Have These!)
+
+The Supabase URL is already configured in `.env.example`. You just need to add the key:
+
+1. **Option 1**: Copy from your existing `backend/.env`:
+   ```bash
+   # Look for one of these in backend/.env:
+   SUPABASE_SECRET_KEY=sb_secret_...
+   # OR
+   SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
+   ```
+   
+   **Note:** The agent accepts either `SUPABASE_KEY` or `SUPABASE_SECRET_KEY` in the `.env` file. You can use either name.
+
+2. **Option 2**: Get from Supabase Dashboard:
+   - Go to: https://supabase.com/dashboard/project/mbihpztquagfvhltofns/settings/api
+   - Copy the **service_role** key or **secret key** (NOT the anon key)
+   - The agent needs write access, so it must be a service role or secret key
+
+#### OpenAI API Key (You Need This!)
+
+1. Go to: https://platform.openai.com/api-keys
+2. Sign in or create an account
+3. Click "Create new secret key"
+4. Copy the key and add to `.env`:
+   ```
+   OPENAI_API_KEY=sk-...
+   ```
+
+#### Backend API URL
+
+The default is already set to `http://localhost:4001` which matches your backend server. If your backend runs on a different port, update it.
+
+#### Agent Server Configuration (Optional)
+
+The agent can run as an API server on port 4002:
+- `AGENT_PORT`: Default is `4002`
+- `AGENT_HOST`: Default is `0.0.0.0` (all interfaces)
+
+These are already set in the `.env.example` file.
+
+### 4. Verify Configuration
+
+Test that your configuration is correct:
+```bash
+python -c "from src.config import Config; Config.validate(); print('✅ Configuration valid!')"
+```
+
+If you see an error about missing configuration, check your `.env` file.
+
+### 5. Database Migration (Already Done!)
+
+The agent tables have already been created via the migration. You can verify by checking the Supabase dashboard or running:
+```sql
+SELECT * FROM agent_workflows LIMIT 1;
+```
+
+## Running Agent Tasks
+
+### Option 1: Run as API Server (Recommended)
+
+Start the server:
+```bash
+python run_server.py
+```
+
+The server runs on `http://localhost:4002`
+
+**Run tasks via API:**
+```bash
+# Client KYC Review
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "client_kyc_review"}'
+
+# Security Collection
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "security_collection"}'
+
+# Security Compliance Review
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "security_compliance_review"}'
+```
+
+**Check task status:**
+```bash
+curl http://localhost:4002/tasks/{workflow_id}
+```
+
+### Option 2: Run from Command Line
+
+```bash
+# Security collection
+python -m src.main security_collection
+
+# Client KYC review
+python -m src.main client_kyc_review
+
+# Security compliance review
+python -m src.main security_compliance_review
+```
+
+## Troubleshooting
+
+### "Missing required configuration" Error
+- Check that your `.env` file exists in the `agent/` directory
+- Verify all three required keys are set: `SUPABASE_URL`, `SUPABASE_KEY`, `OPENAI_API_KEY`
+- Make sure there are no extra spaces or quotes around the values
+
+### "Permission denied" or Database Errors
+- Make sure you're using the **service_role** or **secret key**, not the anon key
+- Verify the key has write permissions in Supabase
+
+### OpenAI API Errors
+- Verify your API key is valid and has credits
+- Check your OpenAI account usage limits
+- Make sure the key starts with `sk-`
+
+## Environment Variables Reference
+
+| Variable | Required | Description | Where to Get |
+|----------|----------|-------------|--------------|
+| `SUPABASE_URL` | Yes | Supabase project URL | Already in `.env.example` |
+| `SUPABASE_KEY` | Yes | Service role or secret key | `backend/.env` or Supabase Dashboard |
+| `OPENAI_API_KEY` | Yes | OpenAI API key | https://platform.openai.com/api-keys |
+| `BACKEND_API_URL` | No | Backend API URL | Default: `http://localhost:4001` |
+| `BACKEND_API_KEY` | No | Backend API auth key | Only if backend requires it |
+

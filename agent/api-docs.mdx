@@ -1,0 +1,246 @@
+---
+title: "Agent API Documentation"
+description: "Complete API documentation for the agent system endpoints"
+---
+
+# Agent API Documentation
+
+The agent system runs as a FastAPI server on port 4002 (configurable via `AGENT_PORT`).
+
+## Base URL
+
+```
+http://localhost:4002
+```
+
+## Interactive API Documentation
+
+FastAPI automatically provides interactive API documentation:
+
+- **Swagger UI**: http://localhost:4002/docs
+- **ReDoc**: http://localhost:4002/redoc
+- **OpenAPI Schema (JSON)**: http://localhost:4002/openapi.json
+
+You can test all endpoints directly from the Swagger UI interface!
+
+## Endpoints
+
+### GET `/`
+Get service information.
+
+**Response:**
+```json
+{
+  "service": "PrivateInvest Agent API",
+  "version": "1.0.0",
+  "status": "running",
+  "available_tasks": [
+    "security_collection",
+    "client_kyc_review",
+    "security_compliance_review"
+  ]
+}
+```
+
+### GET `/health`
+Health check endpoint.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "config": "valid"
+}
+```
+
+### POST `/tasks/run`
+Run an agent task.
+
+**Request Body:**
+```json
+{
+  "task_name": "security_collection",
+  "company_name": "Acme Corporation",  // Required for security_collection
+  "urls": [                              // Optional: URLs to scrape
+    "https://example.com/security-info",
+    "https://example.com/company-details"
+  ],
+  "metadata": {}  // Optional
+}
+```
+
+**Available Tasks:**
+- `security_collection` - Collect private securities (requires `company_name`, optional `urls`)
+- `client_kyc_review` - Review and validate client KYC
+- `security_compliance_review` - Review securities/tranches for compliance
+
+**Response:**
+```json
+{
+  "success": true,
+  "workflow_id": "uuid-here",
+  "message": "Task 'security_collection' started",
+  "status": "PENDING"
+}
+```
+
+**Examples:**
+
+Security Collection (with company name and URLs):
+```bash
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_name": "security_collection",
+    "company_name": "Acme Corporation",
+    "urls": [
+      "https://example.com/security-info",
+      "https://example.com/company-details"
+    ]
+  }'
+```
+
+Security Collection (company name only, no URLs):
+```bash
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_name": "security_collection",
+    "company_name": "Acme Corporation"
+  }'
+```
+
+Client KYC Review:
+```bash
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "client_kyc_review"}'
+```
+
+### GET `/tasks/{workflow_id}`
+Get the status of a running or completed task.
+
+**Response:**
+```json
+{
+  "workflow_id": "uuid-here",
+  "task_name": "client_kyc_review",
+  "status": "COMPLETED",
+  "success": true,
+  "result": {
+    "success": true,
+    "workflow_id": "uuid-here",
+    "status": "COMPLETED"
+  },
+  "error": null
+}
+```
+
+**Status Values:**
+- `PENDING` - Task queued
+- `RUNNING` - Task executing
+- `COMPLETED` - Task finished successfully
+- `FAILED` - Task failed
+
+### GET `/tasks`
+List recent workflows.
+
+**Query Parameters:**
+- `limit` (optional, default: 10) - Number of workflows to return
+- `status` (optional) - Filter by status (PENDING, RUNNING, COMPLETED, FAILED)
+
+**Response:**
+```json
+{
+  "workflows": [
+    {
+      "id": "uuid-here",
+      "name": "Client KYC Review",
+      "workflow_type": "CLIENT_KYC_REVIEW",
+      "status": "COMPLETED",
+      "started_at": "2024-01-01T12:00:00Z",
+      "completed_at": "2024-01-01T12:05:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+### GET `/workflows/{workflow_id}/steps`
+Get all steps for a workflow.
+
+**Response:**
+```json
+{
+  "workflow_id": "uuid-here",
+  "steps": [
+    {
+      "id": "step-uuid",
+      "step_name": "fetch_client_data",
+      "step_type": "FETCH",
+      "status": "COMPLETED",
+      "execution_order": 1,
+      "started_at": "2024-01-01T12:00:00Z",
+      "completed_at": "2024-01-01T12:01:00Z",
+      "duration_ms": 1000
+    }
+  ]
+}
+```
+
+### GET `/workflows/{workflow_id}/context`
+Get the shared context for a workflow.
+
+**Response:**
+```json
+{
+  "workflow_id": "uuid-here",
+  "context": {
+    "pending_clients": [...],
+    "kyc_validation_results": [...],
+    "approved_clients": 5
+  }
+}
+```
+
+## Examples
+
+### Run Client KYC Review
+```bash
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "client_kyc_review"}'
+```
+
+### Check Task Status
+```bash
+curl http://localhost:4002/tasks/{workflow_id}
+```
+
+### List Recent Workflows
+```bash
+curl "http://localhost:4002/tasks?limit=50&status=COMPLETED"
+```
+
+### Get Workflow Steps
+```bash
+curl http://localhost:4002/workflows/{workflow_id}/steps
+```
+
+## Error Responses
+
+All errors return a JSON response with a `detail` field:
+
+```json
+{
+  "detail": "Error message here"
+}
+```
+
+Common HTTP status codes:
+- `400` - Bad Request (invalid task name, etc.)
+- `404` - Not Found (workflow doesn't exist)
+- `500` - Internal Server Error
+- `503` - Service Unavailable (health check failed)
+

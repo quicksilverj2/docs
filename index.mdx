@@ -1,97 +1,112 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "PrivateInvest Documentation"
+description: "B2B-first private markets marketplace for wealth managers (IFAs) to access, negotiate, and transact private securities"
 ---
 
-## Setting up
+## Welcome to PrivateInvest
 
-Get your documentation site up and running in minutes.
+PrivateInvest is a B2B-first private markets marketplace that enables wealth managers (IFAs) to access, negotiate, and transact private securities offered via verified deal originators.
 
 <Card
-  title="Start here"
+  title="Get Started"
   icon="rocket"
-  href="/quickstart"
+  href="/getting-started/setup"
   horizontal
 >
-  Follow our three step quickstart guide.
+  Follow our setup guide to get your development environment running.
 </Card>
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
+## Quick Links
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Setup Guide"
+    icon="gear"
+    href="/getting-started/setup"
   >
-    Edit your docs locally and preview them in real time.
+    Complete setup instructions for the PrivateInvest platform.
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Database Setup"
+    icon="database"
+    href="/getting-started/database-setup"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Configure your PostgreSQL database and run migrations.
   </Card>
   <Card
-    title="API documentation"
+    title="API Overview"
     icon="terminal"
-    href="/api-reference/introduction"
+    href="/api/overview"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Explore all available API endpoints and functionality.
+  </Card>
+  <Card
+    title="Agent System"
+    icon="robot"
+    href="/agent/introduction"
+  >
+    Learn about the AI-powered agent system for automation.
   </Card>
 </Columns>
 
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
+## Architecture & Design
 
 <Columns cols={2}>
   <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
+    title="Product Requirements"
+    icon="file-lines"
+    href="/architecture/product-requirements"
   >
-    Use MDX to style your docs pages.
+    Complete product requirements document (PRD).
   </Card>
   <Card
-    title="Code samples"
+    title="Tech Stack"
     icon="code"
-    href="/essentials/code"
+    href="/architecture/tech-stack"
   >
-    Add sample code to demonstrate how to use your product.
+    Detailed technical stack and architecture decisions.
   </Card>
   <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
+    title="Design System"
+    icon="palette"
+    href="/architecture/design-system"
   >
-    Display images and other media.
+    Design system specifications and guidelines.
   </Card>
   <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
+    title="Implementation Plan"
+    icon="list-check"
+    href="/architecture/implementation-plan"
   >
-    Write once and reuse across your docs.
+    Development roadmap and implementation details.
   </Card>
 </Columns>
 
-## Need inspiration?
+## Key Features
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+- **Multi-role System**: Admin, Compliance, IFA, and Deal Originator roles
+- **Compliance-First**: Built-in approval workflows and audit trails
+- **Private Securities Marketplace**: List, browse, and transact private securities
+- **Tranche Management**: Support for multiple tranches per security with variable pricing
+- **Order & RFQ Workflows**: Complete order management and request-for-quote system
+- **AI Agent System**: Automated security collection and compliance review
+- **Client Management**: IFA client profiles and broker mappings
+
+## Project Structure
+
+```
+.
+├── frontend/          # Next.js application
+├── backend/           # Fastify API server
+├── shared/            # Shared Zod schemas and types
+├── agent/             # AI agent system
+└── docs/              # Documentation files
+```
+
+## Technology Stack
+
+- **Frontend**: Next.js 14+ (App Router), Tailwind CSS, ShadCN UI
+- **Backend**: Node.js with Fastify, PostgreSQL
+- **Database**: Supabase Postgres
+- **Auth**: Supabase Auth
+- **Agent**: Python with OpenAI Agent Kit

@@ -1,0 +1,62 @@
+---
+title: "Swagger Troubleshooting"
+description: "Troubleshooting guide for Swagger/OpenAPI documentation issues"
+---
+
+# Swagger UI Troubleshooting
+
+## Current Status
+- ✅ HTML is being served at `/docs/static/index.html`
+- ✅ JavaScript files are accessible
+- ✅ OpenAPI JSON is available at `/docs/json`
+- ✅ CSP has been disabled
+
+## If Swagger UI is Still Blank
+
+### 1. Check Browser Console
+Open browser DevTools (F12) and check the Console tab for errors:
+- Look for CSP violations
+- Check for JavaScript errors
+- Verify network requests are successful
+
+### 2. Hard Refresh
+- **Chrome/Edge**: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+- **Firefox**: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)
+- **Safari**: Cmd+Option+R
+
+### 3. Clear Browser Cache
+Clear cached files for `localhost:4001`
+
+### 4. Try Direct Access
+- Open: http://localhost:4001/docs/static/index.html
+- Check if it loads (should redirect to `/docs`)
+
+### 5. Check Network Tab
+In DevTools Network tab:
+- Verify `/docs/json` returns 200 OK
+- Check that all static files (CSS, JS) load successfully
+- Look for any 404 or CORS errors
+
+### 6. Test in Incognito/Private Mode
+This eliminates browser extensions or cached data as the issue.
+
+## Alternative: Use Swagger Editor
+If Swagger UI still doesn't work, you can:
+1. Copy the OpenAPI JSON from http://localhost:4001/docs/json
+2. Paste it into https://editor.swagger.io
+3. View and test your API there
+
+## Re-enabling CSP (Future)
+Once Swagger UI works, we can re-enable CSP with proper configuration:
+```javascript
+await fastify.register(helmet, {
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      // ... other directives
+    },
+  },
+})
+```

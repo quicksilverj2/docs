@@ -1,0 +1,135 @@
+---
+title: "Viewing Logs"
+description: "Complete guide to viewing agent workflow logs and debugging"
+---
+
+# Viewing Agent Workflow Logs
+
+## Where to See Logs
+
+### 1. Workflow Status and Error Messages
+
+**API Endpoint:** `GET /tasks/{workflow_id}`
+
+```bash
+curl http://localhost:4002/tasks/bfe63af0-f92c-438e-b2ce-2f3bac2a94c6
+```
+
+**Response includes:**
+- `status`: Workflow status (PENDING, RUNNING, COMPLETED, FAILED)
+- `error_message`: Error details if workflow failed
+- `started_at`: When workflow started
+- `completed_at`: When workflow completed
+- `metadata`: Input parameters
+
+### 2. Individual Step Execution Logs
+
+**API Endpoint:** `GET /workflows/{workflow_id}/steps`
+
+```bash
+curl http://localhost:4002/workflows/bfe63af0-f92c-438e-b2ce-2f3bac2a94c6/steps
+```
+
+**Response includes for each step:**
+- `step_name`: Name of the step
+- `step_type`: Type of step
+- `status`: Step status (PENDING, RUNNING, COMPLETED, FAILED, SKIPPED)
+- `input_data`: Input data for the step
+- `output_data`: Output data from the step
+- `error_message`: Error message if step failed
+- `started_at`: When step started
+- `completed_at`: When step completed
+- `duration_ms`: How long the step took
+
+### 3. Workflow Context (Shared Data)
+
+**API Endpoint:** `GET /workflows/{workflow_id}/context`
+
+```bash
+curl http://localhost:4002/workflows/bfe63af0-f92c-438e-b2ce-2f3bac2a94c6/context
+```
+
+**Response includes:**
+- All context data shared between steps
+- Collected data at each step
+- Intermediate results
+
+### 4. List All Workflows
+
+**API Endpoint:** `GET /tasks`
+
+```bash
+# List recent workflows
+curl http://localhost:4002/tasks
+
+# Filter by status
+curl "http://localhost:4002/tasks?status=FAILED&limit=10"
+```
+
+## Using Swagger UI
+
+1. Go to http://localhost:4002/docs
+2. Use these endpoints:
+   - `GET /tasks/{workflow_id}` - View workflow details
+   - `GET /workflows/{workflow_id}/steps` - View step logs
+   - `GET /workflows/{workflow_id}/context` - View context data
+   - `GET /tasks` - List all workflows
+
+## Database Queries
+
+You can also query the database directly:
+
+```sql
+-- Get workflow details
+SELECT * FROM agent_workflows WHERE id = 'bfe63af0-f92c-438e-b2ce-2f3bac2a94c6';
+
+-- Get all steps for a workflow
+SELECT * FROM agent_workflow_steps 
+WHERE workflow_id = 'bfe63af0-f92c-438e-b2ce-2f3bac2a94c6'
+ORDER BY execution_order;
+
+-- Get context for a workflow
+SELECT * FROM agent_context 
+WHERE workflow_id = 'bfe63af0-f92c-438e-b2ce-2f3bac2a94c6';
+
+-- Get failed workflows
+SELECT * FROM agent_workflows 
+WHERE status = 'FAILED' 
+ORDER BY created_at DESC 
+LIMIT 10;
+```
+
+## Understanding Error Messages
+
+The error message you saw:
+```
+"Invalid parameter: 'response_format' of type 'json_object' is not supported with this model."
+```
+
+This means the OpenAI model being used doesn't support the `response_format` parameter. This has been fixed by:
+- Using `gpt-4o` model instead of `gpt-4` (gpt-4o supports response_format)
+- The code has been updated to use the correct model
+
+## Example: Debugging a Failed Workflow
+
+```bash
+# 1. Get workflow details
+WORKFLOW_ID="bfe63af0-f92c-438e-b2ce-2f3bac2a94c6"
+curl http://localhost:4002/tasks/$WORKFLOW_ID | python -m json.tool
+
+# 2. Get step details to see which step failed
+curl http://localhost:4002/workflows/$WORKFLOW_ID/steps | python -m json.tool
+
+# 3. Get context to see what data was collected
+curl http://localhost:4002/workflows/$WORKFLOW_ID/context | python -m json.tool
+```
+
+## Server Logs
+
+The server also prints logs to the console where you started it. Look for:
+- Task execution messages
+- Error traces
+- Step execution details
+
+If running with `python run_server.py`, check the terminal output.
+

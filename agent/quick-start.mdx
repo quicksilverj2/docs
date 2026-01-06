@@ -1,0 +1,103 @@
+---
+title: "Agent Quick Start"
+description: "Quick start guide for setting up and running the agent system"
+---
+
+# Quick Start Guide
+
+## What You Already Have ✅
+
+- ✅ Supabase URL: `https://mbihpztquagfvhltofns.supabase.co` (already configured)
+- ✅ Supabase Key: Available in your `backend/.env` file
+- ✅ Database tables: Already created via migration
+
+## What You Need to Add ⚠️
+
+- ⚠️ **OpenAI API Key**: Get from https://platform.openai.com/api-keys
+
+## Setup Steps
+
+### 1. Create Environment File
+
+Run the setup script:
+```bash
+cd agent
+./setup_env.sh
+```
+
+Or manually create `.env`:
+```bash
+cat > .env << 'EOF'
+SUPABASE_URL=https://mbihpztquagfvhltofns.supabase.co
+SUPABASE_KEY=your_key_from_backend_env_here
+OPENAI_API_KEY=your_openai_key_here
+BACKEND_API_URL=http://localhost:4001
+EOF
+```
+
+### 2. Get Your Supabase Key
+
+Copy from your existing `backend/.env` file:
+```bash
+# Look for one of these lines:
+grep SUPABASE_SECRET_KEY ../backend/.env
+# OR
+grep SUPABASE_SERVICE_ROLE_KEY ../backend/.env
+```
+
+Copy the value and paste it as `SUPABASE_KEY` in `agent/.env`
+
+### 3. Get Your OpenAI API Key
+
+1. Go to: https://platform.openai.com/api-keys
+2. Sign in or create an account
+3. Click "Create new secret key"
+4. Copy the key (starts with `sk-`)
+5. Paste it as `OPENAI_API_KEY` in `agent/.env`
+
+### 4. Verify Setup
+
+```bash
+# Activate virtual environment (if not already)
+source venv/bin/activate
+
+# Test configuration
+python -c "from src.config import Config; Config.validate(); print('✅ All set!')"
+```
+
+### 5. Run Your First Task
+
+**Option A: Run as API Server (Recommended)**
+```bash
+# Start the server on port 4002
+python run_server.py
+
+# In another terminal, trigger a task:
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "client_kyc_review"}'
+```
+
+**Option B: Run from Command Line**
+```bash
+# Test with client KYC review
+python -m src.main client_kyc_review
+```
+
+## Your .env File Should Look Like:
+
+```env
+SUPABASE_URL=https://mbihpztquagfvhltofns.supabase.co
+SUPABASE_SECRET_KEY=sb_secret_xxxxxxxxxxxxx  # From backend/.env (or use SUPABASE_KEY)
+OPENAI_API_KEY=sk-xxxxxxxxxxxxx              # From OpenAI dashboard
+BACKEND_API_URL=http://localhost:4001
+AGENT_PORT=4002                              # Agent server port
+AGENT_HOST=0.0.0.0                          # Agent server host
+```
+
+**Note:** You can use either `SUPABASE_KEY` or `SUPABASE_SECRET_KEY` - both work!
+
+## That's It! 🎉
+
+You're ready to run agent tasks. See [README.md](README.md) for available tasks.
+

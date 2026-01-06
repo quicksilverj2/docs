@@ -1,43 +1,49 @@
-# Mintlify Starter Kit
+# PrivateInvest Documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+This is the Mintlify documentation site for the PrivateInvest platform.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Setup
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
-
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
-
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
+1. Install Mintlify CLI globally:
+```bash
 npm i -g mint
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
-
+2. Navigate to this directory:
+```bash
+cd mintlify-docs
 ```
+
+3. Start the development server:
+```bash
 mint dev
 ```
 
-View your local preview at `http://localhost:3000`.
+4. View your documentation at `http://localhost:3000`
 
-## Publishing changes
+## Structure
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+The documentation is organized into the following sections:
 
-## Need help?
+- **Getting Started**: Setup guides, database configuration, user credentials
+- **Architecture & Design**: PRD, tech stack, design system, implementation plan
+- **API Documentation**: API overview and troubleshooting
+- **Agent System**: Complete agent system documentation
+- **Development**: Setup status and completion guides
 
-### Troubleshooting
+## Publishing
 
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
+Changes are automatically deployed to production when you push to the default branch (main) if you have the Mintlify GitHub app installed from your dashboard.
 
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+## Updating Documentation
+
+1. Edit the `.mdx` files in the appropriate directories
+2. Test locally with `mint dev`
+3. Commit and push to the repository
+4. Changes will be automatically deployed
+
+## File Locations
+
+- Main configuration: `docs.json`
+- Homepage: `index.mdx`
+- Documentation files: Organized in subdirectories by topic

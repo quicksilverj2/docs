@@ -1,0 +1,78 @@
+---
+title: "Agent Authentication"
+description: "How the agent system authenticates with the backend API"
+---
+
+# Agent Backend Authentication
+
+## Overview
+
+The agent automatically authenticates with the backend API using admin credentials to obtain an access token. This token is cached and reused for subsequent API calls.
+
+## Configuration
+
+Add these environment variables to your `.env` file:
+
+```bash
+# Backend API Configuration
+BACKEND_API_URL=http://localhost:4001
+
+# Agent authentication credentials (for automatic token retrieval)
+BACKEND_AGENT_EMAIL=admin@privexpro.com
+BACKEND_AGENT_PASSWORD=admin
+```
+
+## How It Works
+
+1. **First API Call**: When the agent needs to call the backend API, it calls `get_backend_token()`
+2. **Authentication**: The function signs in to `/api/v1/auth/signin` with the configured credentials
+3. **Token Caching**: The access token is cached in memory to avoid repeated authentication
+4. **Automatic Retry**: If a 401 error occurs, the token is refreshed and the request is retried
+
+## Default Credentials
+
+The default credentials use the admin user:
+- **Email**: `admin@privexpro.com`
+- **Password**: `admin`
+
+These match the seeded admin user from the backend.
+
+## Custom Credentials
+
+You can use any user with `DEAL_ORIGINATOR` or `ADMIN` role:
+
+```bash
+BACKEND_AGENT_EMAIL=dealoriginator@privexpro.com
+BACKEND_AGENT_PASSWORD=dealoriginator
+```
+
+## Token Management
+
+- **Caching**: Tokens are cached in memory for the lifetime of the agent process
+- **Refresh**: Tokens are automatically refreshed if a 401 error is encountered
+- **Manual Refresh**: You can force a refresh by calling `get_backend_token(force_refresh=True)`
+
+## Security Notes
+
+⚠️ **Important**:
+- Store credentials securely in `.env` file (never commit to git)
+- Use a dedicated service account user in production
+- Rotate credentials regularly
+- Consider using environment-specific credentials
+
+## Troubleshooting
+
+### Authentication Fails
+- Verify `BACKEND_AGENT_EMAIL` and `BACKEND_AGENT_PASSWORD` are correct
+- Check that the backend API is running
+- Verify the user exists and has the correct role (ADMIN or DEAL_ORIGINATOR)
+- Check backend API logs for authentication errors
+
+### Token Expired
+- The agent automatically refreshes tokens on 401 errors
+- If issues persist, restart the agent server to clear the cache
+
+### Permission Denied
+- Ensure the user has `DEAL_ORIGINATOR` or `ADMIN` role
+- Check that the user status is `ACTIVE` in the database
+

@@ -1,0 +1,142 @@
+---
+title: "Run Task Example"
+description: "Examples of how to run agent tasks via API or command line"
+---
+
+# How to Run the Security Collection Task
+
+## Option 1: Via API Server (Recommended)
+
+### Step 1: Start the Server
+
+```bash
+cd agent
+source venv/bin/activate
+python run_server.py
+```
+
+The server will start on `http://localhost:4002`
+
+### Step 2: Run the Task
+
+#### Using Swagger UI (Easiest)
+1. Open http://localhost:4002/docs in your browser
+2. Find the `POST /tasks/run` endpoint
+3. Click "Try it out"
+4. Enter the request body:
+```json
+{
+  "task_name": "security_collection"
+}
+```
+5. Click "Execute"
+6. Copy the `workflow_id` from the response
+
+#### Using cURL
+```bash
+# With company name and URLs
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_name": "security_collection",
+    "company_name": "Acme Corporation",
+    "urls": [
+      "https://example.com/security-info",
+      "https://example.com/company-details"
+    ]
+  }'
+
+# With company name only (no URLs)
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_name": "security_collection",
+    "company_name": "Acme Corporation"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "workflow_id": "123e4567-e89b-12d3-a456-426614174000",
+  "message": "Task 'security_collection' started",
+  "status": "PENDING"
+}
+```
+
+### Step 3: Check Task Status
+
+```bash
+# Replace {workflow_id} with the ID from step 2
+curl http://localhost:4002/tasks/{workflow_id}
+```
+
+Or use Swagger UI at http://localhost:4002/docs - find `GET /tasks/{workflow_id}`
+
+### Step 4: View Workflow Details
+
+```bash
+# Get all steps
+curl http://localhost:4002/workflows/{workflow_id}/steps
+
+# Get context (collected data)
+curl http://localhost:4002/workflows/{workflow_id}/context
+```
+
+## Option 2: Command Line (Direct)
+
+```bash
+cd agent
+source venv/bin/activate
+python -m src.main security_collection
+```
+
+This runs the task directly and shows output in the terminal.
+
+## What the Security Collection Task Does
+
+1. **Scrape Web Pages** (if URLs provided): Scrapes and extracts security information from provided web pages
+2. **Collect Data**: Uses company name and scraped data to extract/collect security information (name, issuer, type, sector, etc.)
+3. **Create Securities**: Calls your backend API to create securities in the database
+4. **Populate Sources**: Adds references and sources to the security records
+
+**Input Required:**
+- `company_name` (required): Name of the company for the security
+- `urls` (optional): Array of URLs to scrape for security information
+
+## Monitoring Progress
+
+The task runs asynchronously. You can:
+- Check status via API: `GET /tasks/{workflow_id}`
+- View steps: `GET /workflows/{workflow_id}/steps`
+- Check context: `GET /workflows/{workflow_id}/context`
+- List all workflows: `GET /tasks?limit=50` (default is now 50)
+
+## Example Full Workflow
+
+```bash
+# 1. Start server (in one terminal)
+python run_server.py
+
+# 2. Run task (in another terminal)
+WORKFLOW_ID=$(curl -s -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "security_collection"}' | jq -r '.workflow_id')
+
+echo "Workflow ID: $WORKFLOW_ID"
+
+# 3. Check status
+curl http://localhost:4002/tasks/$WORKFLOW_ID
+
+# 4. Wait a bit, then check again
+sleep 10
+curl http://localhost:4002/tasks/$WORKFLOW_ID
+
+# 5. View steps
+curl http://localhost:4002/workflows/$WORKFLOW_ID/steps
+
+# 6. View collected data
+curl http://localhost:4002/workflows/$WORKFLOW_ID/context
+```
+

@@ -1,0 +1,99 @@
+---
+title: "Agent System Introduction"
+description: "AI-powered agent system for automating security collection and compliance review tasks"
+---
+
+# Agent System
+
+AI-powered agent system for automating security collection and compliance review tasks.
+
+## Setup
+
+See [SETUP.md](SETUP.md) for detailed setup instructions.
+
+Quick start:
+1. Create virtual environment and install dependencies
+2. Copy `.env.example` to `.env`
+3. Add your **OpenAI API key** (the only thing you're missing!)
+4. Copy `SUPABASE_KEY` from your `backend/.env` file
+
+The Supabase URL is already configured. You just need:
+- **SUPABASE_KEY**: Copy from `backend/.env` (look for `SUPABASE_SECRET_KEY`)
+- **OPENAI_API_KEY**: Get from https://platform.openai.com/api-keys
+
+## Usage
+
+### Option 1: Run as API Server (Recommended)
+
+Start the agent server on port 4002:
+```bash
+python run_server.py
+# Or: python -m src.server
+```
+
+The server will be available at: `http://localhost:4002`
+
+**Interactive API Docs:**
+- Swagger UI: http://localhost:4002/docs
+- ReDoc: http://localhost:4002/redoc
+- OpenAPI JSON: http://localhost:4002/openapi.json
+
+**API Endpoints:**
+- `GET /` - Service info
+- `GET /health` - Health check
+- `POST /tasks/run` - Run a task
+- `GET /tasks/{workflow_id}` - Get task status
+- `GET /tasks` - List recent workflows
+- `GET /workflows/{workflow_id}/steps` - Get workflow steps
+- `GET /workflows/{workflow_id}/context` - Get workflow context
+
+**Example: Run a task via API:**
+```bash
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "client_kyc_review"}'
+```
+
+### Option 2: Run from Command Line
+
+Run agent tasks directly:
+
+```bash
+# Security collection
+python -m src.main security_collection
+
+# Client KYC review
+python -m src.main client_kyc_review
+
+# Security compliance review
+python -m src.main security_compliance_review
+```
+
+## Architecture
+
+### Workflow System
+- **Workflow**: Manages execution of steps
+- **Step**: Individual task that implements `execute_step()` method
+- **Context**: Shared storage for workflow data (persisted to database)
+
+### Tasks
+
+1. **Security Collection**: Collects private securities from internet and populates database
+2. **Client KYC Review**: Validates client KYC information and auto-approves compliant clients
+3. **Security Compliance Review**: Reviews and approves securities/tranches pending compliance
+
+## Database Tables
+
+- `agent_workflows`: Workflow execution records
+- `agent_workflow_steps`: Individual step execution records
+- `agent_context`: Shared context storage
+- `agent_executions`: Execution history
+
+## Development
+
+The system uses:
+- OpenAI Agent Kit for AI capabilities
+- Supabase for database
+- Python async/await for concurrent operations
+- Pydantic for data validation
+

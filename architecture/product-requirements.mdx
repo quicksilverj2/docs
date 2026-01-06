@@ -1,0 +1,291 @@
+---
+title: "Product Requirements Document"
+description: "Complete product requirements document (PRD) for the PrivateInvest platform"
+---
+
+# Private Markets Marketplace
+## Product Requirements Document (PRD)
+
+## 1. Product Overview
+
+### 1.1 Purpose
+Build a B2B-first private markets marketplace that enables wealth managers (IFAs) to access, negotiate, and transact private securities offered via verified deal originators. The platform supports multiple tranches per security, variable pricing, compliance-led approvals, and order/RFQ workflows.
+
+The platform is designed to be:
+- Compliance-first
+- Workflow-driven (approvals, entitlements, audits)
+- Extensible toward agent-based automation in Phase 2
+
+## 2. Target Users & Personas
+
+### 2.1 Primary Users
+
+#### Independent Financial Advisors (IFAs)
+- Act on behalf of end-clients
+- Create and manage client profiles
+- Place orders and RFQs on private securities
+
+#### Deal Originators (preferred term over "Deal Bringer")
+- Source and list private securities
+- Define tranches, quantities, and prices
+- Approve or reject orders and RFQs
+
+#### Compliance Users
+- Review and approve marketplace-visible changes
+- Approve KYC for IFAs and Deal Originators
+- Act as a gatekeeper for regulatory hygiene
+
+#### Admin Users
+- System-level administrators
+- Manage user roles and entitlements
+- Cannot be created or promoted by other admins
+
+#### Clients (Non-platform Users)
+- End investors represented by IFAs
+- Do not log in to the platform
+- Exist as managed resources under IFAs
+
+## 3. Role Definitions & Entitlements
+
+### 3.1 Roles
+
+| Role | Description |
+|------|-------------|
+| Admin | Full system access; role management except Admin creation |
+| Compliance | Approves KYC, listings, tranches, prices |
+| IFA | Creates clients, places orders/RFQs |
+| Deal Originator | Lists securities, manages tranches, responds to orders |
+| Client | Passive entity; no platform access |
+
+### 3.2 Key Entitlement Rules
+- Admin users are pre-seeded in the database
+- Admins cannot promote other users to Admin
+- All marketplace-visible actions require Compliance approval
+- IFAs cannot interact directly with other IFAs' clients
+- Deal Originators can only act on securities they created
+
+## 4. Core Domain Concepts
+
+### 4.1 Private Security
+A Private Security represents an underlying unlisted asset (equity, debenture, structured product, etc.).
+
+**Attributes:**
+- Name
+- Issuer
+- Security Type
+- Sector / Industry
+- Description
+- Status (Draft / Pending Approval / Live / Archived)
+
+**Associated Sections:**
+- Tranches
+- Price History
+- Documents & Artefacts
+
+### 4.2 Tranche
+Each Private Security can have multiple tranches.
+
+**Attributes:**
+- Tranche ID
+- Security ID
+- Quantity Available
+- Price
+- Currency
+- Minimum Order Size
+- Validity Period
+- Status (Draft / Pending Approval / Live)
+
+**When a transaction is accepted:**
+- Available quantity is reduced atomically
+
+### 4.3 Pricing
+- Multiple prices allowed for the same security (across tranches or over time)
+- Prices are immutable once approved
+- New prices require compliance approval
+
+## 5. Marketplace Experience
+
+### 5.1 Marketplace Listing Page
+
+#### Initial Version
+- List latest private securities
+- Sort by most recent price date
+- Show:
+  - Security name
+  - Latest price
+  - Available quantity (aggregated)
+  - Number of active tranches
+
+#### Future Enhancements
+- Price trends
+- Volume indicators
+- Security-level analytics
+
+### 5.2 Private Security Detail Page
+
+**Sections:**
+
+1. **Overview**
+   - Issuer, sector, description
+
+2. **Active Tranches**
+   - Price, quantity, minimum order
+
+3. **Price History**
+   - Chronological list (chart later)
+
+4. **Documents**
+   - Term sheets
+   - Financials
+   - Business plans
+   - All documents are read-only downloads.
+
+## 6. User Management & KYC
+
+### 6.1 User Signup Flow
+1. User signs up
+2. User completes mandatory KYC section
+3. Status = `KYC_PENDING`
+4. Compliance reviews and approves
+5. Status = `ACTIVE`
+
+### 6.2 KYC Data Requirements
+
+**Mandatory:**
+- Personal details
+- Government ID type & number
+- Uploaded ID document
+- Address & contact details
+
+**KYC is manual in Phase 1.**
+
+## 7. Client Management (IFA Only)
+
+### 7.1 Client Profile
+Clients are managed entities under IFAs.
+
+**Mandatory Fields:**
+- Client Name
+- Broker Name
+- Broker Client ID
+- Broker Account ID
+
+**Rules:**
+- Multiple broker pairs allowed per client
+- Clients cannot log in
+- All trades are placed by IFAs on behalf of clients
+
+## 8. Order & RFQ Workflows
+
+### 8.1 Standard Order Flow
+1. IFA places order on a tranche
+2. Order is sent to Deal Originator
+3. Deal Originator:
+   - Accepts → transaction confirmed
+   - Rejects → order closed
+4. On acceptance:
+   - Tranche quantity reduced
+   - Order marked `COMPLETED`
+
+### 8.2 RFQ (Request for Quote)
+
+**Used when:**
+- Large quantity required
+- Multiple tranches needed
+- Custom pricing requested
+
+**Flow:**
+1. IFA submits RFQ on a security
+2. RFQ goes to Deal Originator
+3. Deal Originator responds with:
+   - New tranche
+   - Custom price
+4. Compliance approval required before execution
+
+## 9. Compliance & Approval Workflows
+
+### 9.1 Actions Requiring Approval
+- New Private Security creation
+- New tranche creation
+- New price addition
+- Deal Originator KYC
+- Any marketplace-visible update
+
+### 9.2 Approval States
+- Draft
+- Pending Compliance
+- Approved
+- Rejected
+
+**Rejected items can be edited and resubmitted.**
+
+## 10. Notifications
+
+### System Notifications
+- New order placed
+- Order accepted/rejected
+- RFQ received
+- Compliance approval/rejection
+- KYC status updates
+
+**Phase 1:** In-app notifications
+
+**Future:** Email, WhatsApp, webhook integrations
+
+## 11. Audit & Traceability
+Immutable audit logs for:
+- Orders
+- RFQs
+- Approvals
+- Quantity changes
+
+Timestamped and user-attributed. Mandatory for compliance readiness.
+
+## 12. Non-Functional Requirements
+
+### 12.1 Security
+- Role-based access control (RBAC)
+- Secure document storage
+- Encrypted PII and KYC documents
+
+### 12.2 Scalability
+- Designed for multi-tenant B2B usage
+- Clear separation between IFAs and Deal Originators
+
+### 12.3 Compliance Readiness
+- Full approval trails
+- No direct client access
+- Human-in-the-loop workflows
+
+## 13. Phase 2: Agent-Based Automation
+
+### 13.1 Planned Agents
+
+#### KYC Agent
+- Document completeness checks
+- Flag inconsistencies
+
+#### Compliance Agent
+- Pre-review listings and changes
+- Risk flagging
+
+#### Operations Agent
+- Order reconciliation
+- Tranche availability monitoring
+
+**Agents will assist, not replace, human approval initially.**
+
+## 14. Success Metrics (Phase 1)
+- Number of active IFAs
+- Number of listed private securities
+- Order-to-acceptance ratio
+- Average approval turnaround time
+- Zero unauthorized marketplace changes
+
+## 15. Out of Scope (Phase 1)
+- Client self-login
+- Automated settlement
+- Secondary market matching
+- Real-time price charts
+- Payment rails
+

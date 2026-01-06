@@ -1,0 +1,78 @@
+---
+title: "Checking Logs"
+description: "How to check logs for security creation workflows"
+---
+
+# How to Check Logs for Security Creation
+
+## Quick Check Commands
+
+Replace `WORKFLOW_ID` with your actual workflow ID:
+
+```bash
+WORKFLOW_ID="your-workflow-id-here"
+
+# 1. Check if backend API was called
+curl http://localhost:4002/workflows/$WORKFLOW_ID/steps | \
+  python -c "import sys, json; data=json.load(sys.stdin); \
+  step=[s for s in data['steps'] if s['step_name']=='create_security'][0] if any(s['step_name']=='create_security' for s in data['steps']) else None; \
+  print('Step Status:', step['status'] if step else 'NOT FOUND'); \
+  print('Error:', step.get('error_message') if step else 'N/A'); \
+  print('Output:', json.dumps(step.get('output_data', {}), indent=2) if step else 'N/A')"
+
+# 2. Check what data was collected
+curl http://localhost:4002/workflows/$WORKFLOW_ID/context | \
+  python -c "import sys, json; data=json.load(sys.stdin); \
+  collected=data['context'].get('collected_securities', []); \
+  print('Collected Securities Count:', len(collected)); \
+  print('Collected Securities:', json.dumps(collected, indent=2) if collected else 'EMPTY')"
+
+# 3. Full step details
+curl http://localhost:4002/workflows/$WORKFLOW_ID/steps | python -m json.tool
+```
+
+## What to Look For
+
+### In `collect_security_data` step:
+- `status`: Should be "COMPLETED"
+- `output_data.securities`: Should contain array of securities
+- `output_data.count`: Number of securities collected
+
+### In `create_security` step:
+- `status`: "COMPLETED" or "FAILED"
+- `error_message`: Why it failed (if failed)
+- `output_data.total_attempted`: How many were tried
+- `output_data.total_created`: How many succeeded
+- `output_data.errors`: Array of error messages
+- `output_data.debug_info`: Debug information if securities were empty
+
+## Common Issues
+
+### Issue: `collected_securities` is empty in context
+**Check:**
+1. Look at `collect_security_data` step `output_data`
+2. Verify `context_updates` contains `collected_securities`
+3. Check if context was properly saved
+
+### Issue: Backend API not called
+**Check:**
+1. Look at `create_security` step status
+2. If status is "FAILED", check `error_message`
+3. If `collected_securities` is empty, API won't be called
+
+### Issue: API call failed
+**Check:**
+1. `output_data.errors` array
+2. HTTP status code in error message
+3. Verify `BACKEND_API_URL` is correct
+4. Check if backend server is running
+
+## Server Console Logs
+
+The server also prints debug logs to the console. Look for:
+- `DEBUG CollectSecurityDataStep:` - Shows what was collected
+- `DEBUG CreateSecurityStep:` - Shows what was received
+- `DEBUG: Calling backend API:` - Shows API call
+- `DEBUG: API Response Status:` - Shows response
+- `ERROR:` - Any errors
+

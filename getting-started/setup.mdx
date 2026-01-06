@@ -1,0 +1,96 @@
+---
+title: "Setup Guide"
+description: "Complete setup instructions for the PrivateInvest platform including environment variables, database migrations, and development servers"
+---
+
+# Setup Guide
+
+## Initial Setup
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Configure Environment Variables**
+
+   Create `backend/.env`:
+   ```env
+   PORT=4001
+   DATABASE_URL=postgresql://user:password@localhost:5432/privateinvest
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SECRET_KEY=your_secret_key_sb_secret_...
+   FRONTEND_URL=http://localhost:4000
+   LOG_LEVEL=info
+   
+   # Optional: Admin user seeding
+   ADMIN_EMAIL=admin@privateinvest.com
+   ADMIN_PASSWORD=Admin123!@#
+   ADMIN_FIRST_NAME=Admin
+   ADMIN_LAST_NAME=User
+   ```
+
+   Create `frontend/.env.local`:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:4001
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+3. **Run Database Migrations**
+   ```bash
+   cd backend
+   npm run migrate
+   ```
+
+4. **Seed Admin User** (Optional)
+   ```bash
+   cd backend
+   npm run seed:admin
+   ```
+
+5. **Start Development Servers**
+   ```bash
+   # From root directory
+   npm run dev
+   
+   # Or separately:
+   npm run dev:frontend  # http://localhost:4000
+   npm run dev:backend   # http://localhost:4001
+   ```
+
+## Database Setup
+
+If using Supabase:
+1. Create a new Supabase project
+2. Copy the connection string to `DATABASE_URL`
+3. Copy the API keys to the respective env files
+4. Run migrations: `npm run migrate`
+
+If using local PostgreSQL:
+1. Create a database: `createdb privateinvest`
+2. Update `DATABASE_URL` in `backend/.env`
+3. Run migrations: `npm run migrate`
+
+## First Steps
+
+1. Access the application at `http://localhost:4000`
+2. Sign up as an IFA or Deal Originator
+3. Complete KYC (will be pending Compliance approval)
+4. If you seeded an admin, sign in with those credentials
+
+## User Roles
+
+- **ADMIN**: Full system access (pre-seeded only)
+- **COMPLIANCE**: Approves KYC, securities, tranches
+- **IFA**: Creates clients, places orders/RFQs
+- **DEAL_ORIGINATOR**: Lists securities, manages tranches
+
+## Next Steps
+
+- Complete KYC for your user account
+- Create clients (if IFA)
+- List securities (if Deal Originator)
+- Place orders/RFQs (if IFA)
+

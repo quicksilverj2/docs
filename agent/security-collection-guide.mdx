@@ -1,0 +1,124 @@
+---
+title: "Security Collection Guide"
+description: "Guide for using the security collection task to collect private securities information"
+---
+
+# Security Collection Task Guide
+
+## Overview
+
+The Security Collection task collects private securities information for a given company and creates security records in the database.
+
+## Input Parameters
+
+### Required
+- **`company_name`** (string): The name of the company for which to collect security information
+
+### Optional
+- **`urls`** (array of strings): URLs to web pages containing information about the security. These will be scraped and analyzed.
+
+## How It Works
+
+### Step 1: Scrape Web Pages (if URLs provided)
+- Fetches content from each provided URL
+- Extracts text content from the web pages
+- Uses OpenAI to extract security information from the scraped content
+- If no URLs are provided, this step is skipped
+
+### Step 2: Collect Security Data
+- If URLs were provided and scraped: Uses the extracted data from web pages
+- If no URLs: Uses OpenAI to generate security information based on the company name
+- Ensures all required fields are populated (name, issuer, securityType, sector, industry, description)
+
+### Step 3: Create Securities
+- Calls the backend API to create security records
+- Populates sources and references
+- Stores the created securities in the database
+
+## API Usage
+
+### Example 1: With Company Name and URLs
+
+```bash
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_name": "security_collection",
+    "company_name": "TechStart Inc",
+    "urls": [
+      "https://example.com/techstart-securities",
+      "https://example.com/techstart-investment-info"
+    ]
+  }'
+```
+
+### Example 2: Company Name Only (No URLs)
+
+```bash
+curl -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_name": "security_collection",
+    "company_name": "TechStart Inc"
+  }'
+```
+
+### Example 3: Using Swagger UI
+
+1. Go to http://localhost:4002/docs
+2. Find `POST /tasks/run`
+3. Click "Try it out"
+4. Enter:
+```json
+{
+  "task_name": "security_collection",
+  "company_name": "TechStart Inc",
+  "urls": [
+    "https://example.com/security-info"
+  ]
+}
+```
+5. Click "Execute"
+
+## Response
+
+```json
+{
+  "success": true,
+  "workflow_id": "123e4567-e89b-12d3-a456-426614174000",
+  "message": "Task 'security_collection' started",
+  "status": "PENDING"
+}
+```
+
+## Monitoring Progress
+
+```bash
+# Check status
+curl http://localhost:4002/tasks/{workflow_id}
+
+# View steps
+curl http://localhost:4002/workflows/{workflow_id}/steps
+
+# View collected data
+curl http://localhost:4002/workflows/{workflow_id}/context
+```
+
+## Output
+
+The task creates security records with:
+- **name**: Security name (derived from company name or scraped data)
+- **issuer**: Company name
+- **securityType**: Type of security (e.g., PRIVATE_EQUITY)
+- **sector**: Business sector
+- **industry**: Industry classification
+- **description**: Security description
+- **references**: Array of sources with title and URL
+
+## Tips
+
+1. **Provide URLs when available**: URLs with detailed information will result in more accurate data extraction
+2. **Use specific company names**: More specific names lead to better data generation when URLs aren't provided
+3. **Multiple URLs**: You can provide multiple URLs - the system will scrape and combine information from all of them
+4. **Check context**: After execution, check the workflow context to see what data was collected before it was sent to the API
+

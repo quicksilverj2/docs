@@ -1,0 +1,115 @@
+---
+title: "Debug Security Creation"
+description: "Debugging guide for troubleshooting security creation issues"
+---
+
+# Debugging Security Creation Issues
+
+## How to Check Why Securities Weren't Created
+
+### 1. Get Workflow Details
+
+```bash
+WORKFLOW_ID="your-workflow-id"
+curl http://localhost:4002/tasks/$WORKFLOW_ID | python -m json.tool
+```
+
+Check:
+- `status`: Should be "COMPLETED" or "FAILED"
+- `error_message`: Any errors at workflow level
+
+### 2. Check Step Execution
+
+```bash
+curl http://localhost:4002/workflows/$WORKFLOW_ID/steps | python -m json.tool
+```
+
+Look for the `create_security` step:
+- `status`: Should be "COMPLETED" or "FAILED"
+- `error_message`: Error details if it failed
+- `output_data`: Contains:
+  - `created_securities`: Array of created securities
+  - `errors`: Array of error messages
+  - `total_attempted`: How many securities were attempted
+  - `total_created`: How many were successfully created
+
+### 3. Check Collected Data
+
+```bash
+curl http://localhost:4002/workflows/$WORKFLOW_ID/context | python -m json.tool
+```
+
+Look for:
+- `collected_securities`: The data that was collected before creation
+- `scraped_data`: Data from web scraping (if URLs provided)
+
+### 4. Common Issues
+
+#### Issue: No securities collected
+- Check `collect_security_data` step output
+- Verify company name was provided
+- Check if OpenAI extraction succeeded
+
+#### Issue: API call failed
+- Check `create_security` step `error_message`
+- Verify backend API is running at `BACKEND_API_URL`
+- Check if authentication is required
+- Verify API endpoint: `/api/securities`
+
+#### Issue: Missing required fields
+- Check if `name` and `issuer` are present in collected data
+- Verify data structure matches API requirements
+
+### 5. Database Query
+
+```sql
+-- Get workflow steps
+SELECT step_name, status, error_message, output_data 
+FROM agent_workflow_steps 
+WHERE workflow_id = 'your-workflow-id'
+ORDER BY execution_order;
+
+-- Get context
+SELECT key, value 
+FROM agent_context 
+WHERE workflow_id = 'your-workflow-id';
+```
+
+### 6. Example Debug Flow
+
+```bash
+# 1. Get workflow ID from task creation response
+WORKFLOW_ID=$(curl -s -X POST http://localhost:4002/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{"task_name": "security_collection", "company_name": "Test Corp"}' \
+  | python -c "import sys, json; print(json.load(sys.stdin)['workflow_id'])")
+
+echo "Workflow ID: $WORKFLOW_ID"
+
+# 2. Wait a bit
+sleep 5
+
+# 3. Check status
+curl http://localhost:4002/tasks/$WORKFLOW_ID | python -m json.tool
+
+# 4. Check steps
+curl http://localhost:4002/workflows/$WORKFLOW_ID/steps | python -m json.tool
+
+# 5. Check context
+curl http://localhost:4002/workflows/$WORKFLOW_ID/context | python -m json.tool
+```
+
+## Fixed Issues
+
+### Workflow ID Mismatch
+- **Problem**: Server returned a temporary UUID, but workflow created a different ID in database
+- **Solution**: The workflow now returns the actual database ID, and the server tracks both IDs
+
+### Security Creation Logging
+- **Problem**: Errors were silently ignored
+- **Solution**: 
+  - Added detailed error logging
+  - Returns error messages in step output
+  - Validates required fields before API call
+  - Returns success only if at least one security was created
+

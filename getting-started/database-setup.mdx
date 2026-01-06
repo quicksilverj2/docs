@@ -1,0 +1,89 @@
+---
+title: "Database Setup"
+description: "Configure your PostgreSQL database connection, run migrations, and set up Supabase"
+---
+
+# Database Connection Setup
+
+## Current Issue
+
+The database migration is failing because the hostname `db.mbihpztquagfvhltofns.supabase.co` cannot be resolved (DNS error: ENOTFOUND).
+
+## Troubleshooting Steps
+
+### 1. Verify Supabase Project Status
+- Log into your Supabase dashboard
+- Check if the project is active and not paused
+- Verify the project reference ID matches: `mbihpztquagfvhltofns`
+
+### 2. Get the Correct Connection String
+
+In Supabase Dashboard:
+1. Go to **Settings** → **Database**
+2. Under **Connection string**, select **URI**
+3. Copy the connection string (it should look like):
+   ```
+   postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+   ```
+   OR for direct connection:
+   ```
+   postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
+   ```
+
+### 3. Update Backend .env File
+
+Edit `backend/.env` and ensure `DATABASE_URL` is set correctly:
+
+```env
+DATABASE_URL=postgresql://postgres:[YOUR_PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
+```
+
+**Important Notes:**
+- Replace `[YOUR_PASSWORD]` with your actual database password
+- Replace `[PROJECT_REF]` with your Supabase project reference
+- If your password contains special characters, URL-encode them (e.g., `@` becomes `%40`)
+
+### 4. Test the Connection
+
+Run the connection test script:
+```bash
+cd backend
+npx tsx src/db/test-connection.ts
+```
+
+### 5. Run Migrations
+
+Once the connection test passes:
+```bash
+cd backend
+npm run migrate
+```
+
+### 6. Seed Admin User (Optional)
+
+After migrations succeed:
+```bash
+cd backend
+npm run seed:admin
+```
+
+## Alternative: Using Connection Pooling
+
+If direct connection doesn't work, try using Supabase's connection pooler:
+
+```env
+DATABASE_URL=postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true
+```
+
+## SSL Configuration
+
+The migration script automatically enables SSL for Supabase connections. If you encounter SSL errors, the connection will use `rejectUnauthorized: false` for Supabase hosts.
+
+## Need Help?
+
+If the hostname still can't be resolved:
+1. Verify your Supabase project is active
+2. Check your network connection
+3. Try using the connection pooler URL instead
+4. Contact Supabase support if the project reference is correct but DNS fails
+

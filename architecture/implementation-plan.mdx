@@ -1,0 +1,580 @@
+---
+title: "Implementation Plan"
+description: "Detailed implementation plan for all features and requirements"
+---
+
+# Implementation Plan - Additional Requirements
+
+## Overview
+This document outlines the detailed implementation plan for all features mentioned in `additional-requreiments.txt`.
+
+**Last Updated:** 2025-01-31
+
+---
+
+## Clarifications & Decisions
+
+### Profile Fields
+✅ **Confirmed:** Current profile fields are sufficient:
+- `avatar_url` (VARCHAR)
+- `bio` (TEXT)
+- `company` (VARCHAR)
+- `phone` (VARCHAR)
+- `preferences` (JSONB)
+
+### Logo Storage
+✅ **Decision:** Use Supabase Storage
+- Logos will be uploaded to Supabase Storage
+- Store file path/reference in database
+- Download and store ourselves (not external URLs)
+
+### Market News
+✅ **Decision:** Database-stored, scheduled API fetches
+- News stored in database table
+- Fetched on schedule via external APIs
+- Filtered by security that user is viewing
+- Will be used as a tool in agentic flow later (Phase 2)
+- Implementation: Create news table, scheduled job, API integration
+
+### Design Direction
+✅ **Decision:** Modern, premium design as specified
+- No additional design requirements
+- Follow existing design system enhancements
+
+---
+
+## 1. User Profile & Settings System
+
+### 1.1 Profile Creation on Login ✅ IN PROGRESS
+
+**Status:** Backend Complete, Frontend Pending  
+**Priority:** High (Foundational)
+
+**Requirements:**
+- Automatically create/update user profile in database on successful login
+- Store profile metadata: avatar, bio, company, phone, preferences
+- Track login activity and last login timestamp
+- Create audit log entry for login events
+
+**Backend Tasks:**
+- [x] Add profile fields to users table (avatar_url, bio, company, phone, preferences JSONB)
+- [x] Add user_activity_log table for tracking activities
+- [x] Update signin endpoint to create/update profile on login
+- [x] Add login activity tracking with IP and user agent
+- [x] Create profile API endpoints (GET, PATCH /users/me/profile)
+
+**Frontend Tasks:**
+- [ ] Create profile display component
+- [ ] Auto-fetch profile on login
+- [ ] Display profile in user menu/header
+- [ ] Add profile avatar to navigation
+
+**Files Created/Modified:**
+- ✅ `backend/src/db/migrations/003_add_user_profile_fields.sql`
+- ✅ `backend/src/routes/auth.ts` (updated signin)
+- ✅ `backend/src/routes/users.ts` (added profile endpoints)
+- ⏳ `frontend/components/profile/profile-display.tsx` (new)
+- ⏳ `frontend/components/layout/user-menu.tsx` (new)
+
+---
+
+### 1.2 Settings Page
+
+**Status:** ⏳ Pending  
+**Priority:** High (Foundational)
+
+**Requirements:**
+- Dedicated settings page (`/settings`)
+- Sections: Profile, Security, Notifications, Preferences
+- Update profile information
+- Change password
+- Manage notification preferences
+- Theme preferences (if applicable)
+
+**Tasks:**
+- [ ] Create settings page layout with tabs/sections
+- [ ] Profile settings form (avatar upload, bio, company, phone)
+- [ ] Security settings (password change via Supabase Auth)
+- [ ] Notification preferences (stored in user.preferences JSONB)
+- [ ] API endpoints for settings updates
+- [ ] Add settings link to navigation/sidebar
+- [ ] Avatar upload component with Supabase Storage integration
+
+**Files to Create/Modify:**
+- `frontend/app/settings/page.tsx` (new)
+- `frontend/components/settings/settings-layout.tsx` (new)
+- `frontend/components/settings/profile-settings.tsx` (new)
+- `frontend/components/settings/security-settings.tsx` (new)
+- `frontend/components/settings/notification-settings.tsx` (new)
+- `frontend/components/ui/avatar-upload.tsx` (new)
+- `backend/src/routes/users.ts` (add password change endpoint)
+- `backend/src/routes/storage.ts` (new - for file uploads)
+
+**API Endpoints:**
+- `PATCH /users/me/profile` (already exists)
+- `POST /users/me/password` (new - change password)
+- `POST /storage/upload` (new - upload avatar to Supabase Storage)
+
+---
+
+## 2. Enhanced Design System (Premium & Modern)
+
+**Status:** ⏳ Pending  
+**Priority:** High (User Experience)
+
+**Requirements:**
+- Modern, premium design that gives sense of pride
+- Refined color palette, typography, spacing
+- Enhanced component library
+- Better visual hierarchy
+- Premium animations and transitions
+- Professional branding elements
+
+**Tasks:**
+- [ ] Review and enhance design system tokens
+- [ ] Update color palette for premium feel (refine existing tokens)
+- [ ] Refine typography scale and font weights
+- [ ] Add premium UI components:
+  - [ ] Enhanced badges with variants
+  - [ ] Premium card components with shadows/gradients
+  - [ ] Stats cards with icons
+  - [ ] Progress indicators
+  - [ ] Status indicators with animations
+- [ ] Enhance existing components with better styling
+- [ ] Add subtle animations and transitions (fade, slide, scale)
+- [ ] Update global styles for consistency
+- [ ] Add premium loading states (skeleton loaders)
+- [ ] Enhance empty states with illustrations/guidance
+- [ ] Add hover effects and micro-interactions
+
+**Files to Create/Modify:**
+- `frontend/tailwind.config.ts` (enhance tokens)
+- `frontend/app/globals.css` (add animations, refine styles)
+- `frontend/components/ui/badge.tsx` (enhance)
+- `frontend/components/ui/card.tsx` (enhance with variants)
+- `frontend/components/ui/stats-card.tsx` (new)
+- `frontend/components/ui/progress.tsx` (new)
+- `frontend/components/ui/skeleton.tsx` (new)
+- `frontend/components/ui/empty-state.tsx` (new)
+- `docs/designSystem.md` (update with new components)
+
+---
+
+## 3. Entitlement Layer
+
+**Status:** ⏳ Pending  
+**Priority:** High (Security & Access Control)
+
+**Requirements:**
+- Resource ownership model
+- Users own resources (Securities, Clients, Deals)
+- Role-based access with ownership checks
+- Group-based entitlements (future - Phase 2)
+- Audit trail for access
+
+**Current State:**
+- Basic role-based access exists (`requireRole` middleware)
+- Ownership tracked via `created_by` fields in tables
+- Need to formalize entitlement checks across all endpoints
+
+**Implementation:**
+- Create entitlement utilities/middleware
+- Add ownership checks to all resource endpoints
+- Create `canAccess`, `canEdit`, `canDelete` helpers
+- Document entitlement rules per role
+
+**Entitlement Rules:**
+
+| Resource | Owner | IFA | Deal Originator | Compliance | Admin |
+|----------|-------|-----|-----------------|------------|-------|
+| Security | Full access | View LIVE only | Own + View all | View all | Full access |
+| Tranche | Full access | View LIVE only | Own + View all | View all | Full access |
+| Client | Full access | Own only | None | View all | Full access |
+| Order | Full access | Own only | On own securities | View all | Full access |
+| RFQ | Full access | Own only | On own securities | View all | Full access |
+
+**Tasks:**
+- [ ] Create `backend/src/middleware/entitlements.ts`
+  - [ ] `canAccessResource(resourceType, resourceId, userId, role)`
+  - [ ] `canEditResource(resourceType, resourceId, userId, role)`
+  - [ ] `canDeleteResource(resourceType, resourceId, userId, role)`
+  - [ ] `getResourceOwner(resourceType, resourceId)`
+- [ ] Update all routes to use entitlement checks:
+  - [ ] `backend/src/routes/securities.ts`
+  - [ ] `backend/src/routes/tranches.ts`
+  - [ ] `backend/src/routes/clients.ts`
+  - [ ] `backend/src/routes/orders.ts`
+  - [ ] `backend/src/routes/rfqs.ts`
+- [ ] Add entitlement tests
+- [ ] Document entitlement model in `docs/ENTITLEMENTS.md`
+
+**Files to Create/Modify:**
+- `backend/src/middleware/entitlements.ts` (new)
+- `backend/src/routes/securities.ts` (add ownership checks)
+- `backend/src/routes/tranches.ts` (add ownership checks)
+- `backend/src/routes/clients.ts` (add ownership checks)
+- `backend/src/routes/orders.ts` (add ownership checks)
+- `backend/src/routes/rfqs.ts` (add ownership checks)
+- `docs/ENTITLEMENTS.md` (new)
+
+---
+
+## 4. Security Detail Page
+
+**Status:** ⏳ Pending  
+**Priority:** Medium
+
+**Requirements:**
+- Comprehensive security detail page (`/securities/[id]`)
+- Reference: https://unlistedzone.com/shares/oravel-stays-limited-oyo-unlisted-shares
+- Sections:
+  - Header: Logo, name, issuer, status badge
+  - Price range card (min/max across tranches)
+  - Aggregated stats: Total deals, closed deals, in-progress deals
+  - Sources/references section with links
+  - Market news section (filtered by security)
+  - Tranches list with actions
+  - Related information
+
+**Database Changes:**
+- [ ] Add `logo_url` to `private_securities` table (references Supabase Storage)
+- [ ] Add `references` JSONB field to `private_securities` table
+  - Structure: `[{title: string, url: string, description?: string}]`
+- [ ] Create `security_news` table for market news
+  - Fields: `id`, `security_id`, `title`, `source`, `url`, `published_at`, `summary`, `created_at`
+
+**Backend Tasks:**
+- [ ] Create migration for security metadata fields
+- [ ] Enhance `GET /securities/:id` endpoint:
+  - [ ] Include logo_url, references
+  - [ ] Calculate price range (min/max from tranches)
+  - [ ] Aggregate deal stats (total, closed, in-progress)
+  - [ ] Include related tranches with status
+  - [ ] Include filtered market news
+- [ ] Create news API endpoints:
+  - [ ] `GET /securities/:id/news` (filtered by security)
+  - [ ] `POST /securities/:id/news` (admin - manual entry)
+- [ ] Create scheduled job for fetching news (future)
+
+**Frontend Tasks:**
+- [ ] Create security detail page layout
+- [ ] Header component: Logo, name, issuer, status badge
+- [ ] Price range card component
+- [ ] Aggregated stats component (deals breakdown)
+- [ ] Sources/references section component
+- [ ] Market news section component (with filtering)
+- [ ] Tranches list with actions (Edit, Add Price, Mark Inactive, View Detail)
+- [ ] Add navigation from marketplace to detail page
+- [ ] Add "View Details" button functionality
+
+**Files to Create/Modify:**
+- `backend/src/db/migrations/004_add_security_metadata.sql` (new)
+- `backend/src/db/migrations/005_create_security_news.sql` (new)
+- `backend/src/routes/securities.ts` (enhance GET /:id)
+- `backend/src/routes/news.ts` (new)
+- `backend/src/jobs/news-fetcher.ts` (new - scheduled job)
+- `frontend/app/securities/[id]/page.tsx` (new)
+- `frontend/components/securities/security-detail-header.tsx` (new)
+- `frontend/components/securities/security-price-range.tsx` (new)
+- `frontend/components/securities/security-stats.tsx` (new)
+- `frontend/components/securities/security-sources.tsx` (new)
+- `frontend/components/securities/security-news.tsx` (new)
+- `frontend/components/securities/security-tranches-list.tsx` (new)
+
+**News Table Schema:**
+```sql
+CREATE TABLE security_news (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  security_id UUID NOT NULL REFERENCES private_securities(id) ON DELETE CASCADE,
+  title VARCHAR(500) NOT NULL,
+  source VARCHAR(255) NOT NULL,
+  url VARCHAR(1000),
+  published_at TIMESTAMP WITH TIME ZONE,
+  summary TEXT,
+  metadata JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+---
+
+## 5. Tranche Detail Page
+
+**Status:** ⏳ Pending  
+**Priority:** Medium
+
+**Requirements:**
+- Detailed tranche page (`/tranches/[id]`)
+- Show fill progress (filled_value / total_tranche_value)
+- Costs breakdown (source price, banker price, spread, transaction cost)
+- Date-related UI cards (open date, close date, valid period)
+- Pricing history timeline
+- Actions: Edit, Add Price, Mark Inactive
+
+**Backend Tasks:**
+- [ ] Ensure `GET /tranches/:id` includes all required fields
+- [ ] Include pricing history in response
+- [ ] Calculate fill percentage
+
+**Frontend Tasks:**
+- [ ] Create tranche detail page layout
+- [ ] Progress bar component (fill progress with percentage)
+- [ ] Costs breakdown card (source, banker, spread, transaction cost)
+- [ ] Date cards component (open date, close date, valid period)
+- [ ] Pricing history timeline component
+- [ ] Action buttons (Edit, Add Price, Mark Inactive)
+- [ ] Navigation from security page to tranche detail
+- [ ] Add "View Details" button to tranche lists
+
+**Files to Create/Modify:**
+- `frontend/app/tranches/[id]/page.tsx` (new)
+- `frontend/components/tranches/tranche-detail-header.tsx` (new)
+- `frontend/components/tranches/tranche-progress.tsx` (new)
+- `frontend/components/tranches/tranche-costs.tsx` (new)
+- `frontend/components/tranches/tranche-dates.tsx` (new)
+- `frontend/components/tranches/pricing-history-timeline.tsx` (new)
+- `frontend/components/tranches/tranche-actions.tsx` (new)
+
+---
+
+## 6. Orders Page Enhancement
+
+**Status:** ⏳ Pending  
+**Priority:** Medium
+
+**Requirements:**
+- Enhanced orders page (`/orders`)
+- Filtered list of deals by clients
+- User sees only orders they have access to:
+  - IFA: Their own orders
+  - Deal Originator: Orders on their securities
+  - Admin: All orders
+- Filters: Status, Client, Security, Date range
+- Sort options: Date, Status, Amount
+- Order detail view
+
+**Backend Tasks:**
+- [ ] Verify access control in `GET /orders` endpoint
+- [ ] Add filtering support (query params)
+- [ ] Add sorting support (query params)
+- [ ] Enhance order response with related data (security name, client name)
+
+**Frontend Tasks:**
+- [ ] Enhance orders page layout
+- [ ] Add filters component (Status, Client, Security, Date range)
+- [ ] Add sort functionality (dropdown)
+- [ ] Create order list component with better UX
+- [ ] Create order detail view/modal
+- [ ] Add order status badges with colors
+- [ ] Display client information
+- [ ] Display security information
+- [ ] Add pagination (if needed)
+
+**Files to Create/Modify:**
+- `frontend/app/orders/page.tsx` (enhance)
+- `frontend/components/orders/order-filters.tsx` (new)
+- `frontend/components/orders/order-list.tsx` (new)
+- `frontend/components/orders/order-detail.tsx` (new)
+- `frontend/components/orders/order-card.tsx` (new)
+- `backend/src/routes/orders.ts` (add filtering/sorting)
+
+---
+
+## 7. Marketplace Enhancement
+
+**Status:** ⏳ Pending  
+**Priority:** Medium
+
+**Requirements:**
+- Show active tranches with aggregated information
+- Better visualization of tranches
+- Aggregated stats per security
+- Filter and search capabilities
+- Sort options
+
+**Backend Tasks:**
+- [ ] Update `GET /securities` to include tranche aggregation
+- [ ] Add filtering support (status, sector, price range)
+- [ ] Add search support (name, issuer)
+- [ ] Add sorting support
+
+**Frontend Tasks:**
+- [ ] Update marketplace to show tranches prominently
+- [ ] Add tranche cards/grid view option
+- [ ] Add aggregated information per security
+- [ ] Add filters (status, sector, price range)
+- [ ] Add search functionality
+- [ ] Add sort options (price, date, name)
+- [ ] Enhance visual design
+- [ ] Add view toggle (list/grid)
+
+**Files to Create/Modify:**
+- `frontend/app/marketplace/page.tsx` (enhance)
+- `frontend/components/marketplace/tranche-card.tsx` (new)
+- `frontend/components/marketplace/marketplace-filters.tsx` (new)
+- `frontend/components/marketplace/marketplace-search.tsx` (new)
+- `backend/src/routes/securities.ts` (add filtering/sorting)
+
+---
+
+## 8. Notifications System
+
+**Status:** ⏳ Pending  
+**Priority:** Medium
+
+**Requirements:**
+- Three types of notifications:
+  1. **User Profile Related**: Activity, login, profile updates
+  2. **Role Related**: New security to review, security activity (edit/add price/add tranche)
+  3. **Direct**: Approval requests, review requests
+
+**Current State:**
+- Notifications table exists
+- Basic notification creation in some endpoints
+
+**Notification Types:**
+- `USER_LOGIN` - User logged in
+- `PROFILE_UPDATE` - Profile updated
+- `SECURITY_CREATED` - New security created (Compliance role)
+- `SECURITY_UPDATED` - Security updated (Compliance role)
+- `TRANCHE_CREATED` - New tranche created (Compliance role)
+- `TRANCHE_UPDATED` - Tranche updated (Compliance role)
+- `PRICE_ADDED` - Price added to tranche (Compliance role)
+- `APPROVAL_REQUEST` - Approval requested (Direct)
+- `REVIEW_REQUEST` - Review requested (Direct)
+
+**Backend Tasks:**
+- [ ] Create notification service/utilities
+- [ ] Create notifications for:
+  - [ ] User login/activity (already done in auth.ts)
+  - [ ] Security created/updated
+  - [ ] Tranche created/updated
+  - [ ] Price added
+  - [ ] Approval requests
+  - [ ] Review requests
+- [ ] Add notification endpoints:
+  - [ ] `GET /notifications` (list with filters)
+  - [ ] `GET /notifications/unread` (count)
+  - [ ] `PATCH /notifications/:id/read` (mark as read)
+  - [ ] `PATCH /notifications/read-all` (mark all as read)
+
+**Frontend Tasks:**
+- [ ] Notification bell/indicator in header
+- [ ] Notifications dropdown component
+- [ ] Notifications list page (`/notifications`)
+- [ ] Mark as read functionality
+- [ ] Unread count badge
+- [ ] Notification types with icons
+- [ ] Click to navigate to related resource
+
+**Files to Create/Modify:**
+- `backend/src/services/notifications.ts` (new)
+- `backend/src/routes/notifications.ts` (enhance)
+- `backend/src/routes/auth.ts` (add login notification - already done)
+- `backend/src/routes/securities.ts` (add activity notifications)
+- `backend/src/routes/tranches.ts` (add activity notifications)
+- `backend/src/routes/compliance.ts` (add approval/review notifications)
+- `frontend/components/notifications/notification-bell.tsx` (new)
+- `frontend/components/notifications/notification-dropdown.tsx` (new)
+- `frontend/components/notifications/notification-list.tsx` (new)
+- `frontend/app/notifications/page.tsx` (new)
+
+---
+
+## Implementation Order (Recommended)
+
+### Phase 1: Foundation (Current)
+1. ✅ **User Profile & Settings** (Backend Complete)
+   - Profile creation on login ✅
+   - Settings page ⏳
+
+2. **Entitlement Layer** (Security)
+   - Formalize ownership checks
+   - Add entitlement middleware
+
+3. **Enhanced Design System** (UX)
+   - Premium design updates
+   - Component enhancements
+
+### Phase 2: Core Features
+4. **Security Detail Page**
+   - Comprehensive security view
+   - Metadata and references
+   - Market news integration
+
+5. **Tranche Detail Page**
+   - Detailed tranche view
+   - Progress and costs
+
+6. **Orders Page Enhancement**
+   - Filtered orders view
+
+7. **Marketplace Enhancement**
+   - Active tranches display
+
+### Phase 3: Enhancements
+8. **Notifications System**
+   - Complete notification system
+   - Real-time updates (future)
+
+---
+
+## Database Migrations Summary
+
+1. ✅ `001_initial_schema.sql` - Initial database schema
+2. ✅ `002_add_tranche_fields.sql` - Tranche enhancements
+3. ✅ `003_add_user_profile_fields.sql` - User profile fields
+4. ⏳ `004_add_security_metadata.sql` - Security logo and references
+5. ⏳ `005_create_security_news.sql` - Market news table
+
+---
+
+## API Endpoints Summary
+
+### New Endpoints Needed
+- `GET /users/me/profile` ✅
+- `PATCH /users/me/profile` ✅
+- `POST /users/me/password` (change password)
+- `POST /storage/upload` (upload avatar)
+- `GET /securities/:id/news` (filtered news)
+- `POST /securities/:id/news` (admin - manual entry)
+- `GET /notifications/unread` (unread count)
+- `PATCH /notifications/:id/read` (mark as read)
+- `PATCH /notifications/read-all` (mark all as read)
+
+### Enhanced Endpoints
+- `GET /securities/:id` (add metadata, stats, news)
+- `GET /tranches/:id` (ensure all fields included)
+- `GET /orders` (add filtering/sorting)
+- `GET /securities` (add filtering/sorting)
+- `GET /notifications` (add filtering)
+
+---
+
+## Testing Checklist
+
+- [ ] Profile creation on login
+- [ ] Profile update
+- [ ] Settings page functionality
+- [ ] Entitlement checks for all resources
+- [ ] Security detail page display
+- [ ] Tranche detail page display
+- [ ] Orders filtering and sorting
+- [ ] Marketplace filtering and search
+- [ ] Notification creation and display
+- [ ] Avatar upload to Supabase Storage
+
+---
+
+## Notes
+
+- All file uploads (logos, avatars) will use Supabase Storage
+- Market news will be fetched on schedule (implementation details TBD)
+- News filtering by security is required for agentic flow (Phase 2)
+- Entitlement layer is critical for security - implement early
+- Design system enhancements should be done incrementally
+
+---
+
+**Next Steps:** Continue with frontend profile components and settings page.
